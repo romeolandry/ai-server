@@ -1,14 +1,34 @@
 {
     email {{ caddy_email }}
 }
+{{ ollama_domain | default("ollama.kcrl-devops.de") }} {
+    # Primary Ollama host — proxy all requests to the Ollama API
+    reverse_proxy 127.0.0.1:{{ ollama_port }} {
+        # Pin upstream Host header if the upstream expects it
+        header_up Host localhost:{{ ollama_port }}
 
-{{ caddy_domain }} {
-    @ollama path /ollama*
-    handle @ollama {
-        reverse_proxy 127.0.0.1:{{ ollama_port }}
+        # Low latency for streaming workloads
+        flush_interval -1
+
+        transport http {
+            # Avoid upstream gzip negotiation if it interferes with streaming
+            compression off
+
+            # Give Ollama time to load a model and produce the first chunk
+            response_header_timeout 10m
+            dial_timeout 10s
+        }
     }
 
-    reverse_proxy 127.0.0.1:{{ caddy_backend_port }}
+    encode gzip
+    log
+}
+
+{{ caddy_domain }} {
+    # Serve a static HTML file for the default operator UI
+    root * /var/www/html
+    try_files {path} /index.html
+    file_server
     encode gzip
     log
 }
