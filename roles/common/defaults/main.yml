@@ -1,0 +1,12 @@
+---
+ansible_user: root
+admin_user: root
+required_packages:
+  - git
+  - curl
+  - ca-certificates
+  - gnupg
+  - debian-keyring
+  - debian-archive-keyring
+  - apt-transport-https
+timezone: UTC

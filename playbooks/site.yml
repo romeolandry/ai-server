@@ -1,0 +1,93 @@
+---
+- name: Setup Server with Git, Curl, Docker, Docker Compose, and Caddy
+  hosts: webservers
+  become: true
+  tasks:
+
+    - name: Update apt cache and install prerequisite packages
+      apt:
+        name:
+          - git
+          - curl
+          - ca-certificates
+          - gnupg
+          - debian-keyring
+          - debian-archive-keyring
+          - apt-transport-https
+        state: present
+        update_cache: yes
+
+    # --- Docker Setup ---
+    - name: Create directory for Docker keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker APT repository
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: [deb]
+        uris:
+          - https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}
+        suites:
+          - "{{ ansible_facts['distribution_release'] }}"
+        components:
+          - stable
+        signed_by: /etc/apt/keyrings/docker.asc
+        state: present
+
+    - name: Install Docker and Docker Compose plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is running and enabled
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    # --- Caddy Setup ---
+    - name: Download Caddy GPG key
+      get_url:
+        url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+        dest: /etc/apt/trusted.gpg.d/caddy-stable.asc
+        mode: '0644'
+
+    - name: Add Caddy APT repository
+      ansible.builtin.deb822_repository:
+        name: caddy-stable
+        types: [deb]
+        uris:
+          - https://dl.cloudsmith.io/public/caddy/stable/deb/debian
+        suites:
+          - any-version
+        components:
+          - main
+        signed_by: /etc/apt/trusted.gpg.d/caddy-stable.asc
+        state: present
+
+    - name: Install Caddy Server
+      apt:
+        name: caddy
+        state: present
+        update_cache: yes
+
+    - name: Ensure Caddy service is running and enabled
+      systemd:
+        name: caddy
+        state: started
+        enabled: yes

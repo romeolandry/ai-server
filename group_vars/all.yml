@@ -1,0 +1,8 @@
+---
+admin_user: root
+common_packages:
+  - curl
+  - git
+  - htop
+  - vim
+timezone: UTC
