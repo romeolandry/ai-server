@@ -8,7 +8,12 @@ This repository provisions a Debian-based AI server with Docker, Caddy, and Olla
 - SSH user: `root`
 - Public domain: `https://ai-operator.kcrl-devops.de`
 - Default Ollama model: `gemma4:e4b`
-- Frontend API URL: `https://ai-operator.kcrl-devops.de/ollama`
+- Frontend API URL: `https://ollama.kcrl-devops.de`
+
+Hosts:
+
+- Public Ollama host: `https://ollama.kcrl-devops.de` — proxied to the local Ollama service and intended for API access.
+- Operator UI: `https://ai-operator.kcrl-devops.de` — serves a static HTML file from `/var/www/index.htm` (default operator landing page).
 - Stack installed by the playbook:
   - `git`
   - `curl`
@@ -39,7 +44,7 @@ The following variables are configurable in the project:
 ollama_model: gemma4:e4b
 ollama_host: 0.0.0.0
 ollama_port: 11434
-frontend_api_url: https://ai-operator.kcrl-devops.de/ollama
+frontend_api_url: https://ollama.kcrl-devops.de
 caddy_domain: ai-operator.kcrl-devops.de
 caddy_email: kamgoche@yahoo.com
 caddy_backend_port: 8080
@@ -69,9 +74,27 @@ Change any of these values in `group_vars/all.yml` or the active inventory file 
    ```
 
 5. Confirm the frontend route is active:
+## Makefile
+
+This repository includes a `Makefile` with convenient targets to run common Ansible tasks locally:
+
+- `make proof`  — run `ansible-lint` if installed (fast pre-check)
+- `make syntax` — run `ansible-playbook --syntax-check`
+- `make check`  — run playbook in `--check` (dry-run)
+- `make apply`  — run the playbook to apply changes
+- `make full`   — runs `syntax` -> `check` -> `apply` sequentially (stops on failure)
+
+Examples:
+
+```bash
+make syntax
+make check
+make full
+```
+
 
    ```bash
-   curl -I https://ai-operator.kcrl-devops.de/ollama
+   curl -I https://ollama.kcrl-devops.de
    ```
 
 ## Notes
