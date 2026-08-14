@@ -86,8 +86,17 @@
         state: present
         update_cache: yes
 
+    - name: Deploy Caddy configuration with automatic HTTPS
+      ansible.builtin.template:
+        src: ../roles/common/templates/Caddyfile.j2
+        dest: /etc/caddy/Caddyfile
+        owner: root
+        group: root
+        mode: '0644'
+        backup: true
+
     - name: Ensure Caddy service is running and enabled
       systemd:
         name: caddy
-        state: started
+        state: restarted
         enabled: yes

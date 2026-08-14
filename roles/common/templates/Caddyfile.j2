@@ -1,0 +1,9 @@
+{
+    email {{ caddy_email }}
+}
+
+{{ caddy_domain }} {
+    reverse_proxy 127.0.0.1:{{ caddy_backend_port }}
+    encode gzip
+    log
+}

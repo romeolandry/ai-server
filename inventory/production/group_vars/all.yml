@@ -1,11 +1,5 @@
 ---
-admin_user: root
-common_packages:
-  - curl
-  - git
-  - htop
-  - vim
-timezone: UTC
+ansible_user: root
 caddy_domain: ai-operator.kcrl-devops.de
 caddy_email: kamgoche@yahoo.com
 caddy_backend_port: 8080
