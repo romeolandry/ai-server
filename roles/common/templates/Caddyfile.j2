@@ -3,6 +3,11 @@
 }
 
 {{ caddy_domain }} {
+    @ollama path /ollama*
+    handle @ollama {
+        reverse_proxy 127.0.0.1:{{ ollama_port }}
+    }
+
     reverse_proxy 127.0.0.1:{{ caddy_backend_port }}
     encode gzip
     log

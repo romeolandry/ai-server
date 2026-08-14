@@ -100,3 +100,58 @@
         name: caddy
         state: restarted
         enabled: yes
+
+    # --- Ollama Setup ---
+    - name: Check whether Ollama is already installed
+      ansible.builtin.command: command -v ollama
+      register: ollama_bin
+      changed_when: false
+      failed_when: false
+
+    - name: Install Ollama
+      ansible.builtin.shell: |
+        curl -fsSL https://ollama.com/install.sh | sh
+      args:
+        creates: /usr/local/bin/ollama
+      when: ollama_bin.rc != 0
+
+    - name: Configure Ollama host and port
+      ansible.builtin.file:
+        path: /etc/systemd/system/ollama.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Write Ollama service override
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/ollama.service.d/override.conf
+        content: |
+          [Service]
+          Environment="OLLAMA_HOST={{ ollama_host }}:{{ ollama_port }}"
+        mode: '0644'
+        owner: root
+        group: root
+      register: ollama_service_override
+
+    - name: Reload systemd daemon if Ollama override changed
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: ollama_service_override.changed
+
+    - name: Ensure Ollama service is running and enabled
+      ansible.builtin.systemd:
+        name: ollama
+        state: started
+        enabled: true
+
+    - name: Pull configured Ollama model
+      ansible.builtin.command: /usr/local/bin/ollama pull {{ ollama_model }}
+      register: ollama_pull
+      changed_when: "'is already available' not in ollama_pull.stderr and 'already exists' not in ollama_pull.stderr"
+      failed_when: ollama_pull.rc != 0
+
+    - name: Show active Ollama model
+      ansible.builtin.command: /usr/local/bin/ollama list
+      register: ollama_list
+      changed_when: false

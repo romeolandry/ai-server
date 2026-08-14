@@ -3,3 +3,8 @@ ansible_user: root
 caddy_domain: ai-operator.kcrl-devops.de
 caddy_email: kamgoche@yahoo.com
 caddy_backend_port: 8080
+ollama_host: 0.0.0.0
+ollama_port: 11434
+ollama_api_url: http://127.0.0.1:11434
+frontend_api_url: https://ai-operator.kcrl-devops.de/ollama
+ollama_model: gemma4:e4b
