@@ -1,0 +1,31 @@
+---
+- name: Destroy the named Hetzner Cloud VPS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false  # Prevents Ansible from invoking sudo locally
+  collections:
+    - hetzner.hcloud
+
+  vars:
+    hetzner_api_token: "{{ lookup('env', 'HETZNER_API_TOKEN') | default('') }}"
+    server_name: "{{ lookup('env', 'SERVER_NAME') | default('ai-server') }}"
+
+  pre_tasks:
+    - name: Validate API token is configured
+      ansible.builtin.assert:
+        that:
+          - hetzner_api_token | length > 0
+        fail_msg: "Set the HETZNER_API_TOKEN environment variable or define hetzner_api_token before running this playbook."
+
+  tasks:
+    - name: Delete the Hetzner VPS named {{ server_name }}
+      hetzner.hcloud.hcloud_server:
+        api_token: "{{ hetzner_api_token }}"
+        name: "{{ server_name }}"
+        state: absent
+      register: hcloud_server
+
+    - name: Display deletion status
+      ansible.builtin.debug:
+        msg: "Deleted server {{ server_name }}"

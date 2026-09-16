@@ -104,6 +104,23 @@ make check
 make full
 ```
 
+## Clear Hetzner VPS
+
+Use the cleanup playbook to delete the Hetzner server by name instead of creating one:
+
+```bash
+SERVER_NAME=ai-server ~/.ansible-venv/bin/ansible-playbook playbooks/clear_hetzner.yml
+```
+
+Or use the corresponding Makefile targets:
+
+```bash
+make clear-hetzner-syntax
+SERVER_NAME=ai-server make clear-hetzner-run
+SERVER_NAME=ai-server make clear-hetzner-full
+```
+
+The playbook validates the Hetzner token and removes the server whose name matches `SERVER_NAME`.
 
    ```bash
    curl -I https://ollama.kcrl-devops.de

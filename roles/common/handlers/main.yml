@@ -4,3 +4,9 @@
     name: systemd-timesyncd
     state: restarted
   listen: restart time sync
+
+- name: Restart Caddy
+  ansible.builtin.systemd:
+    name: caddy
+    state: restarted
+  listen: Restart Caddy

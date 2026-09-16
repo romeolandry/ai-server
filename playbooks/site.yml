@@ -100,6 +100,23 @@
         name: caddy
         state: restarted
         enabled: yes
+      
+    - name: Ensure web root directory exists
+      ansible.builtin.file:
+        path: /var/www/html
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Caddy index.html to web root
+      ansible.builtin.copy:
+        src: ../roles/common/files/index.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Caddy
 
     # --- Ollama Setup ---
     - name: Check whether Ollama is already installed

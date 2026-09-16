@@ -3,8 +3,9 @@ INVENTORY := inventory/production/hosts.yml
 HETZNER_INVENTORY := inventory/hetzner/hosts.yml
 PLAYBOOK := playbooks/site.yml
 PROVISION_PLAYBOOK := playbooks/provision_hetzner.yml
+CLEAR_HETZNER_PLAYBOOK := playbooks/clear_hetzner.yml
 
-.PHONY: help proof syntax check apply full hetzner-syntax hetzner-check hetzner-apply hetzner-full provision-syntax provision-run provision-full
+.PHONY: help proof syntax check apply full hetzner-syntax hetzner-check hetzner-apply hetzner-full provision-syntax provision-run provision-full clear-hetzner-syntax clear-hetzner-run clear-hetzner-full
 
 help:
 	@echo "Makefile targets:"
@@ -20,6 +21,15 @@ help:
 	@echo "  provision-syntax  - syntax-check the Hetzner VPS provisioning playbook"
 	@echo "  provision-run     - create a new Hetzner VPS and deploy the app"
 	@echo "  provision-full    - syntax-check + run the Hetzner provisioning playbook"
+	@echo "  clear-hetzner-syntax - syntax-check the Hetzner VPS deletion playbook"
+	@echo "  clear-hetzner-run    - delete the Hetzner VPS named by SERVER_NAME"
+	@echo "  clear-hetzner-full   - syntax-check + run the Hetzner deletion playbook"
+
+# Include .env file if it exists
+ifneq ( $(wildcard .env), )
+    include .env
+    export $(shell sed 's/=.*//' .env)
+endif
 
 proof:
 	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint $(PLAYBOOK) || \
@@ -57,3 +67,12 @@ provision-run:
 
 provision-full: provision-syntax provision-run
 	@echo "Hetzner VPS provisioning completed."
+
+clear-hetzner-syntax:
+	$(ANSIBLE_PLAYBOOK) $(CLEAR_HETZNER_PLAYBOOK) --syntax-check
+
+clear-hetzner-run:
+	$(ANSIBLE_PLAYBOOK) $(CLEAR_HETZNER_PLAYBOOK)
+
+clear-hetzner-full: clear-hetzner-syntax clear-hetzner-run
+	@echo "Hetzner VPS deletion completed."

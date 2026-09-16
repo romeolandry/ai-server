@@ -3,6 +3,7 @@
   hosts: localhost
   connection: local
   gather_facts: false
+  become: false  # Prevents Ansible from invoking sudo locally
   collections:
     - hetzner.hcloud
 
