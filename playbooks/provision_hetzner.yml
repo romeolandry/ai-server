@@ -1,0 +1,60 @@
+---
+- name: Provision a new Hetzner Cloud VPS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  collections:
+    - hetzner.hcloud
+
+  vars:
+    hetzner_api_token: "{{ lookup('env', 'HETZNER_API_TOKEN') | default('') }}"
+    server_name: "{{ lookup('env', 'SERVER_NAME') | default('ai-server') }}"
+    server_type: "{{ lookup('env', 'SERVER_TYPE') | default('cx22') }}"
+    image: "{{ lookup('env', 'IMAGE') | default('ubuntu-24.04') }}"
+    location: "{{ lookup('env', 'LOCATION') | default('nbg1') }}"
+    ssh_key_name: "{{ lookup('env', 'SSH_KEY_NAME') | default('default') }}"
+    ssh_key_names_raw: "{{ lookup('env', 'SSH_KEY_NAMES') | default('', true) }}"
+    ssh_key_names: "{{ (ssh_key_names_raw | length > 0) | ternary(ssh_key_names_raw.split(',') | map('trim') | reject('equalto', '') | list, [ssh_key_name]) }}"
+    server_wait_timeout: 600
+
+  pre_tasks:
+    - name: Validate API token is configured
+      ansible.builtin.assert:
+        that:
+          - hetzner_api_token | length > 0
+        fail_msg: "Set the HETZNER_API_TOKEN environment variable or define hetzner_api_token before running this playbook."
+
+  tasks:
+    - name: Create or start the Hetzner VPS using existing SSH keys in Hetzner
+      hetzner.hcloud.hcloud_server:
+        api_token: "{{ hetzner_api_token }}"
+        name: "{{ server_name }}"
+        server_type: "{{ server_type }}"
+        image: "{{ image }}"
+        location: "{{ location }}"
+        ssh_keys: "{{ ssh_key_names }}"
+        state: started
+      register: hcloud_server
+
+    - name: Add the new server to the in-memory inventory
+      ansible.builtin.add_host:
+        name: "{{ hcloud_server.hcloud_server.ipv4_address }}"
+        groups: webservers
+        ansible_user: root
+        ansible_host: "{{ hcloud_server.hcloud_server.ipv4_address }}"
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+    - name: Wait for SSH to become reachable on the new VPS
+      ansible.builtin.wait_for:
+        host: "{{ hcloud_server.hcloud_server.ipv4_address }}"
+        port: 22
+        delay: 20
+        timeout: "{{ server_wait_timeout }}"
+        state: started
+
+    - name: Display the created server address
+      ansible.builtin.debug:
+        msg: "Server created! IPv4: {{ hcloud_server.hcloud_server.ipv4_address }}"
+
+- name: Deploy the app stack to the provisioned Hetzner VPS
+  import_playbook: site.yml

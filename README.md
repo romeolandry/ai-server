@@ -55,16 +55,28 @@ Change any of these values in `group_vars/all.yml` or the active inventory file 
 ## Quick start
 
 1. Update the target host and variables if needed.
-2. Validate the playbook:
+2. For a Hetzner VPS, use the dedicated inventory:
+
+   ```bash
+   ansible-playbook -i inventory/hetzner/hosts.yml playbooks/site.yml --syntax-check
+   ```
+
+3. Validate the playbook:
 
    ```bash
    ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --syntax-check
    ```
 
-3. Run the full setup:
+4. Run the full setup:
 
    ```bash
    ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml
+   ```
+
+5. Or deploy directly to the Hetzner inventory:
+
+   ```bash
+   ansible-playbook -i inventory/hetzner/hosts.yml playbooks/site.yml
    ```
 
 4. Confirm Ollama is reachable:
@@ -103,3 +115,18 @@ make full
 - Requests under `/ollama` are proxied to the local Ollama service on port `11434`.
 - The backend application port is expected to run on `8080` if used behind Caddy.
 - The project is intentionally modular and can be extended with additional services or roles.
+
+## Local Python virtual environment
+
+Follow these steps to create a Python 3 virtual environment, activate it, and install dependencies from [requirements.txt](requirements.txt):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+- To deactivate the virtual environment: `deactivate`
+- On Windows (PowerShell), activate with: `.\.venv\Scripts\Activate.ps1`
+
